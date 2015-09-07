@@ -64,11 +64,11 @@
 
 - (BOOL) isSystemUrl:(NSURL*)url
 {
-	if ([[url host] isEqualToString:@"itunes.apple.com"]) {
-		return YES;
-	}
+    if ([[url host] isEqualToString:@"itunes.apple.com"]) {
+        return YES;
+    }
 
-	return NO;
+    return NO;
 }
 
 - (void)open:(CDVInvokedUrlCommand*)command
@@ -198,6 +198,10 @@
     [self.inAppBrowserViewController navigateTo:url];
     if (!browserOptions.hidden) {
         [self show:nil];
+    }
+    
+    if (browserOptions.titlecaption != nil) {
+        [self.inAppBrowserViewController setToolbarTitle:browserOptions.titlecaption];
     }
 }
 
@@ -588,9 +592,15 @@
     self.backButton.enabled = YES;
     self.backButton.imageInsets = UIEdgeInsetsZero;
 
-    [self.toolbar setItems:@[self.closeButton, flexibleSpaceButton, self.backButton, fixedSpaceButton, self.forwardButton]];
+    self.titleLabel = [[UILabel alloc] init];
+    self.titleLabel.backgroundColor = [UIColor clearColor];
+    self.titleLabel.textColor = [UIColor whiteColor];
+    [self.titleLabel sizeToFit];
+    UIBarButtonItem* toolbarTitle = [[UIBarButtonItem alloc] initWithCustomView:self.titleLabel];
+    
+    [self.toolbar setItems:@[flexibleSpaceButton, toolbarTitle, flexibleSpaceButton, self.closeButton]];
 
-    self.view.backgroundColor = [UIColor grayColor];
+    self.view.backgroundColor = [UIColor colorWithRed:13.0 / 255.0 green:13.0 / 255.0 blue:13.0 / 255.0 alpha:1];
     [self.view addSubview:self.toolbar];
     [self.view addSubview:self.addressLabel];
     [self.view addSubview:self.spinner];
@@ -612,6 +622,20 @@
 
     NSMutableArray* items = [self.toolbar.items mutableCopy];
     [items replaceObjectAtIndex:0 withObject:self.closeButton];
+    [self.toolbar setItems:items];
+}
+
+- (void)setToolbarTitle:(NSString*)title
+{
+    self.titleLabel = [[UILabel alloc] init];
+    self.titleLabel.backgroundColor = [UIColor clearColor];
+    self.titleLabel.textColor = [UIColor whiteColor];
+    self.titleLabel.text = title;
+    [self.titleLabel sizeToFit];
+    UIBarButtonItem* toolbarTitleTest = [[UIBarButtonItem alloc] initWithCustomView:self.titleLabel];
+    
+    NSMutableArray* items = [self.toolbar.items mutableCopy];
+    [items replaceObjectAtIndex:1 withObject:toolbarTitleTest];
     [self.toolbar setItems:items];
 }
 
@@ -923,6 +947,7 @@
         self.location = YES;
         self.toolbar = YES;
         self.closebuttoncaption = nil;
+        self.titlecaption = nil;
         self.toolbarposition = kInAppBrowserToolbarBarPositionBottom;
         self.clearcache = NO;
         self.clearsessioncache = NO;
