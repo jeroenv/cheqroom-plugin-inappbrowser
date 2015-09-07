@@ -29,7 +29,7 @@
 #define    kInAppBrowserToolbarBarPositionTop @"top"
 
 #define    TOOLBAR_HEIGHT 44.0
-#define    LOCATIONBAR_HEIGHT 21.0
+#define    LOCATIONBAR_HEIGHT 0.0 //don't show location bar
 #define    FOOTER_HEIGHT ((TOOLBAR_HEIGHT) + (LOCATIONBAR_HEIGHT))
 
 #pragma mark CDVInAppBrowser
@@ -519,6 +519,8 @@
 
     self.closeButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(close)];
     self.closeButton.enabled = YES;
+    //white text for close button
+    self.closeButton.tintColor = [UIColor whiteColor]; 
 
     UIBarButtonItem* flexibleSpaceButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
 
@@ -540,6 +542,9 @@
     self.toolbar.multipleTouchEnabled = NO;
     self.toolbar.opaque = NO;
     self.toolbar.userInteractionEnabled = YES;
+    // make sure toolbar background color is black
+    self.toolbar.backgroundColor = [UIColor colorWithRed:13.0 / 255.0 green:13.0 / 255.0 blue:13.0 / 255.0 alpha:1];
+
 
     CGFloat labelInset = 5.0;
     float locationBarY = toolbarIsAtBottom ? self.view.bounds.size.height - FOOTER_HEIGHT : self.view.bounds.size.height - LOCATIONBAR_HEIGHT;
@@ -736,7 +741,7 @@
 
 - (UIStatusBarStyle)preferredStatusBarStyle
 {
-    return UIStatusBarStyleDefault;
+    return UIStatusBarStyleBlackOpaque;
 }
 
 - (void)close
@@ -982,7 +987,7 @@
     // simplified from: http://stackoverflow.com/a/25669695/219684
 
     UIToolbar* bgToolbar = [[UIToolbar alloc] initWithFrame:frame];
-    bgToolbar.barStyle = UIBarStyleDefault;
+    bgToolbar.barStyle = UIStatusBarStyleBlackOpaque;
     [self.view addSubview:bgToolbar];
 
     [super viewDidLoad];
