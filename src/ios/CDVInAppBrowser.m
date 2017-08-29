@@ -29,12 +29,8 @@
 #define    kInAppBrowserToolbarBarPositionTop @"top"
 
 #define    TOOLBAR_HEIGHT 44.0
-<<<<<<< HEAD
-#define    LOCATIONBAR_HEIGHT 0.0 //don't show location bar
-=======
 #define    STATUSBAR_HEIGHT 20.0
 #define    LOCATIONBAR_HEIGHT 21.0
->>>>>>> ccdea5004349d66f12c94f37e90cc205dd2ba8cd
 #define    FOOTER_HEIGHT ((TOOLBAR_HEIGHT) + (LOCATIONBAR_HEIGHT))
 
 #pragma mark CDVInAppBrowser
