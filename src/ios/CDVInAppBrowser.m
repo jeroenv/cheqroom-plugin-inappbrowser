@@ -64,6 +64,14 @@
         NSLog(@"IAB.close() called but it was already closed.");
         return;
     }
+
+    UIView *lastView;
+    for(UIView *subview in [self.viewController.view subviews]) {
+        lastView = subview;
+    }
+    [lastView removeFromSuperview];
+    
+
     // Things are cleaned up in browserExit.
     [self.inAppBrowserViewController close];
 }
@@ -243,15 +251,20 @@
     // Run later to avoid the "took a long time" log message.
     dispatch_async(dispatch_get_main_queue(), ^{
         if (weakSelf.inAppBrowserViewController != nil) {
-            CGRect frame = [[UIScreen mainScreen] bounds];
+            /*CGRect frame = [[UIScreen mainScreen] bounds];
             UIWindow *tmpWindow = [[UIWindow alloc] initWithFrame:frame];
             UIViewController *tmpController = [[UIViewController alloc] init];
             [tmpWindow setRootViewController:tmpController];
             [tmpWindow setWindowLevel:UIWindowLevelNormal];
 
             [tmpWindow makeKeyAndVisible];
-            [tmpController presentViewController:nav animated:YES completion:nil];
+            [tmpController presentViewController:nav animated:YES completion:nil];*/
+
+            weakSelf.inAppBrowserViewController.view.frame = CGRectMake(0,64,weakSelf.inAppBrowserViewController.view.frame.size.width,weakSelf.inAppBrowserViewController.view.frame.size.height-64);
+            [weakSelf.viewController.view addSubview:weakSelf.inAppBrowserViewController.view];
         }
+
+
     });
 }
 
@@ -274,7 +287,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         if (self.inAppBrowserViewController != nil) {
             _previousStatusBarStyle = -1;
-            [self.inAppBrowserViewController.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+            [self.viewController.presentingViewController dismissViewControllerAnimated:YES completion:nil];
         }
     });
 }
