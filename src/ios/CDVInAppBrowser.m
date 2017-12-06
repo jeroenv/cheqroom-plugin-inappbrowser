@@ -259,6 +259,12 @@
 
             [tmpWindow makeKeyAndVisible];
             [tmpController presentViewController:nav animated:YES completion:nil];*/
+            
+
+            float heightOffset = 44; //44px offset for navbar
+
+            CGRect frame  = [[UIApplication sharedApplication] statusBarFrame];
+            heightOffset += frame.size.height; //add statusbar height 
 
             weakSelf.inAppBrowserViewController.view.frame = CGRectMake(0,64,weakSelf.inAppBrowserViewController.view.frame.size.width,weakSelf.inAppBrowserViewController.view.frame.size.height-64);
             [weakSelf.viewController.view addSubview:weakSelf.inAppBrowserViewController.view];
