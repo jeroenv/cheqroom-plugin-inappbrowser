@@ -21,6 +21,7 @@ package org.apache.cordova.inappbrowser;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.PixelFormat;
 import android.provider.Browser;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -33,6 +34,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
@@ -250,28 +252,6 @@ public class InAppBrowser extends CordovaPlugin {
             }
             injectDeferredObject(args.getString(0), jsWrapper);
         }
-        else if (action.equals("show")) {
-            this.cordova.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    dialog.show();
-                }
-            });
-            PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
-            pluginResult.setKeepCallback(true);
-            this.callbackContext.sendPluginResult(pluginResult);
-        }
-        else if (action.equals("hide")) {
-            this.cordova.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    dialog.hide();
-                }
-            });
-            PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
-            pluginResult.setKeepCallback(true);
-            this.callbackContext.sendPluginResult(pluginResult);
-        }
         else {
             return false;
         }
@@ -431,7 +411,8 @@ public class InAppBrowser extends CordovaPlugin {
                     // NB: wait for about:blank before dismissing
                     public void onPageFinished(WebView view, String url) {
                         if (dialog != null) {
-                            dialog.dismiss();
+                            ((ViewGroup)webView.getView().getParent()).removeView(dialog);
+
                             dialog = null;
                         }
                     }
@@ -568,7 +549,7 @@ public class InAppBrowser extends CordovaPlugin {
             }
             Boolean wideViewPort = features.get(USER_WIDE_VIEW_PORT);
             if (wideViewPort != null ) {
-		            useWideViewPort = wideViewPort.booleanValue();
+                    useWideViewPort = wideViewPort.booleanValue();
             }
         }
 
@@ -592,17 +573,8 @@ public class InAppBrowser extends CordovaPlugin {
 
             @SuppressLint("NewApi")
             public void run() {
-
-                // CB-6702 InAppBrowser hangs when opening more than one instance
-                if (dialog != null) {
-                    dialog.dismiss();
-                };
-
                 // Let's create the main dialog
-                dialog = new InAppBrowserDialog(cordova.getActivity(), android.R.style.Theme_NoTitleBar);
-                dialog.getWindow().getAttributes().windowAnimations = android.R.style.Animation_Dialog;
-                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                dialog.setCancelable(true);
+                dialog = new InAppBrowserDialog(cordova.getActivity());
                 dialog.setInAppBroswer(getInAppBrowser());
 
                 // Main container layout
@@ -842,19 +814,14 @@ public class InAppBrowser extends CordovaPlugin {
                 // Add our webview to our main view/layout
                 main.addView(inAppWebView);
 
-                WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-                lp.copyFrom(dialog.getWindow().getAttributes());
-                lp.width = WindowManager.LayoutParams.MATCH_PARENT;
-                lp.height = WindowManager.LayoutParams.MATCH_PARENT;
+                // Add navbar/statusbar offset
+                int offsetHeight = 44;
+                RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+                params.topMargin = this.dpToPixels(offsetHeight);
 
-                dialog.setContentView(main);
-                dialog.show();
-                dialog.getWindow().setAttributes(lp);
-                // the goal of openhidden is to load the url and not display it
-                // Show() needs to be called to cause the URL to be loaded
-                if(openWindowHidden) {
-                    dialog.hide();
-                }
+                dialog.addView(main, params);
+
+                ((ViewGroup)webView.getView().getParent()).addView(dialog);
             }
         };
         this.cordova.getActivity().runOnUiThread(runnable);
@@ -886,6 +853,8 @@ public class InAppBrowser extends CordovaPlugin {
             }
         }
     }
+
+
 
     /**
      * Receive File Data from File Chooser
