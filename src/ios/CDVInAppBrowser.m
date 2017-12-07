@@ -266,7 +266,7 @@
             CGRect frame  = [[UIApplication sharedApplication] statusBarFrame];
             heightOffset += frame.size.height; //add statusbar height 
 
-            weakSelf.inAppBrowserViewController.view.frame = CGRectMake(0,64,weakSelf.inAppBrowserViewController.view.frame.size.width,weakSelf.inAppBrowserViewController.view.frame.size.height-64);
+            weakSelf.inAppBrowserViewController.view.frame = CGRectMake(0,heightOffset,weakSelf.inAppBrowserViewController.view.frame.size.width,weakSelf.inAppBrowserViewController.view.frame.size.height-heightOffset);
             [weakSelf.viewController.view addSubview:weakSelf.inAppBrowserViewController.view];
         }
 
