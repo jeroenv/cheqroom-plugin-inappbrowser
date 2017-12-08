@@ -828,6 +828,10 @@ public class InAppBrowser extends CordovaPlugin {
         return "";
     }
 
+    public void onBackPressed(){
+        closeDialog();
+    }
+
     /**
      * Create a new plugin success result and send it back to JavaScript
      *
