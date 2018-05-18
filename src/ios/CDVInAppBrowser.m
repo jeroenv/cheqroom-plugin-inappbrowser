@@ -762,6 +762,11 @@
             webViewBounds.size.height -= TOOLBAR_HEIGHT;
             [self setWebViewFrame:webViewBounds];
         } else {
+            CGFloat statusBarOffset = [self getStatusBarOffset];
+
+            CGRect webViewBounds = self.view.bounds;
+            webViewBounds.size.height -= (TOOLBAR_HEIGHT + statusBarOffset);
+
             // no toolBar, expand webView to screen dimensions
             [self setWebViewFrame:self.view.bounds];
         }
