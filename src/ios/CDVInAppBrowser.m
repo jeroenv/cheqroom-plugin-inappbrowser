@@ -921,10 +921,9 @@
 - (void) rePositionViews {
     if(IsAtLeastiOSVersion(@"11.0")){
         CGFloat statusBarOffset = [self getStatusBarOffset];
-        CGFloat webviewOffset = _browserOptions.fullscreen ? 0.0 : toolbarHeight + statusBarOffset;    
 
         if ([_browserOptions.toolbarposition isEqualToString:kInAppBrowserToolbarBarPositionTop]) {
-            [self.webView setFrame:CGRectMake(self.webView.frame.origin.x, webviewOffset, self.webView.frame.size.width, (self.webView.frame.size.height-statusBarOffset))];
+            [self.webView setFrame:CGRectMake(self.webView.frame.origin.x, statusBarOffset, self.webView.frame.size.width, (self.webView.frame.size.height-statusBarOffset))];
             [self.toolbar setFrame:CGRectMake(self.toolbar.frame.origin.x, statusBarOffset, self.toolbar.frame.size.width, self.toolbar.frame.size.height)];
         }
     }else{
