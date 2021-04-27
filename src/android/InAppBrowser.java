@@ -39,12 +39,14 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.webkit.HttpAuthHandler;
 import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
@@ -117,7 +119,12 @@ public class InAppBrowser extends CordovaPlugin {
     private static final String BEFORELOAD = "beforeload";
     private static final String FULLSCREEN = "fullscreen";
 
-    private static final List customizableOptions = Arrays.asList(CLOSE_BUTTON_CAPTION, TOOLBAR_COLOR, NAVIGATION_COLOR, CLOSE_BUTTON_COLOR, FOOTER_COLOR);
+    public static final String X = "x";
+    public static final String Y = "y";
+    public static final String WIDTH = "width";
+    public static final String HEIGHT = "height";
+
+    private static final List customizableOptions = Arrays.asList(CLOSE_BUTTON_CAPTION, TOOLBAR_COLOR, NAVIGATION_COLOR, CLOSE_BUTTON_COLOR, FOOTER_COLOR, X, Y, WIDTH, HEIGHT);
 
     private InAppBrowserDialog dialog;
     private WebView inAppWebView;
@@ -132,8 +139,10 @@ public class InAppBrowser extends CordovaPlugin {
     private boolean mediaPlaybackRequiresUserGesture = false;
     private boolean shouldPauseInAppBrowser = false;
     private boolean useWideViewPort = true;
-    private ValueCallback<Uri[]> mUploadCallback;
+    private ValueCallback<Uri> mUploadCallback;
+    private ValueCallback<Uri[]> mUploadCallbackLollipop;
     private final static int FILECHOOSER_REQUESTCODE = 1;
+    private final static int FILECHOOSER_REQUESTCODE_LOLLIPOP = 2;
     private String closeButtonCaption = "";
     private String closeButtonColor = "";
     private boolean leftToRight = false;
@@ -408,7 +417,12 @@ public class InAppBrowser extends CordovaPlugin {
                 @SuppressLint("NewApi")
                 @Override
                 public void run() {
-                    inAppWebView.evaluateJavascript(finalScriptToInject, null);
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+                        // This action will have the side-effect of blurring the currently focused element
+                        inAppWebView.loadUrl("javascript:" + finalScriptToInject);
+                    } else {
+                        inAppWebView.evaluateJavascript(finalScriptToInject, null);
+                    }
                 }
             });
         } else {
@@ -751,7 +765,8 @@ public class InAppBrowser extends CordovaPlugin {
                     if (closeButtonColor != "") close.setColorFilter(android.graphics.Color.parseColor(closeButtonColor));
                     close.setImageDrawable(closeIcon);
                     close.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                    close.getAdjustViewBounds();
+                    if (Build.VERSION.SDK_INT >= 16)
+                        close.getAdjustViewBounds();
 
                     _close = close;
                 }
@@ -760,7 +775,11 @@ public class InAppBrowser extends CordovaPlugin {
                 if (leftToRight) closeLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
                 else closeLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
                 _close.setLayoutParams(closeLayoutParams);
-                _close.setBackground(null);
+
+                if (Build.VERSION.SDK_INT >= 16)
+                    _close.setBackground(null);
+                else
+                    _close.setBackgroundDrawable(null);
 
                 _close.setContentDescription("Close Button");
                 _close.setId(Integer.valueOf(id));
@@ -790,6 +809,17 @@ public class InAppBrowser extends CordovaPlugin {
                 }
                 dialog.setCancelable(true);
                 dialog.setInAppBroswer(getInAppBrowser());
+
+                Window window = dialog.getWindow();
+                WindowManager.LayoutParams wlp = window.getAttributes();
+                wlp.gravity = Gravity.TOP | Gravity.LEFT;
+                wlp.width = features.get(WIDTH) != null ? this.dpToPixels(Integer.parseInt(features.get(WIDTH))) : WindowManager.LayoutParams.MATCH_PARENT;
+                wlp.height = features.get(HEIGHT) != null ? this.dpToPixels(Integer.parseInt(features.get(HEIGHT))) : WindowManager.LayoutParams.MATCH_PARENT;
+                wlp.dimAmount=0.5f;
+                window.setFlags(LayoutParams.FLAG_NOT_TOUCH_MODAL,LayoutParams.FLAG_NOT_TOUCH_MODAL);
+                window.setFlags(LayoutParams.FLAG_NOT_FOCUSABLE,LayoutParams.FLAG_NOT_FOCUSABLE);
+                window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+                window.setAttributes(wlp);
 
                 // Main container layout
                 LinearLayout main = new LinearLayout(cordova.getActivity());
@@ -829,11 +859,15 @@ public class InAppBrowser extends CordovaPlugin {
                 int backResId = activityRes.getIdentifier("ic_action_previous_item", "drawable", cordova.getActivity().getPackageName());
                 Drawable backIcon = activityRes.getDrawable(backResId);
                 if (navigationButtonColor != "") back.setColorFilter(android.graphics.Color.parseColor(navigationButtonColor));
-                back.setBackground(null);
+                if (Build.VERSION.SDK_INT >= 16)
+                    back.setBackground(null);
+                else
+                    back.setBackgroundDrawable(null);
                 back.setImageDrawable(backIcon);
                 back.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 back.setPadding(0, this.dpToPixels(10), 0, this.dpToPixels(10));
-                back.getAdjustViewBounds();
+                if (Build.VERSION.SDK_INT >= 16)
+                    back.getAdjustViewBounds();
 
                 back.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
@@ -851,11 +885,15 @@ public class InAppBrowser extends CordovaPlugin {
                 int fwdResId = activityRes.getIdentifier("ic_action_next_item", "drawable", cordova.getActivity().getPackageName());
                 Drawable fwdIcon = activityRes.getDrawable(fwdResId);
                 if (navigationButtonColor != "") forward.setColorFilter(android.graphics.Color.parseColor(navigationButtonColor));
-                forward.setBackground(null);
+                if (Build.VERSION.SDK_INT >= 16)
+                    forward.setBackground(null);
+                else
+                    forward.setBackgroundDrawable(null);
                 forward.setImageDrawable(fwdIcon);
                 forward.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 forward.setPadding(0, this.dpToPixels(10), 0, this.dpToPixels(10));
-                forward.getAdjustViewBounds();
+                if (Build.VERSION.SDK_INT >= 16)
+                    forward.getAdjustViewBounds();
 
                 forward.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
@@ -918,14 +956,15 @@ public class InAppBrowser extends CordovaPlugin {
                 inAppWebView.setId(Integer.valueOf(6));
                 // File Chooser Implemented ChromeClient
                 inAppWebView.setWebChromeClient(new InAppChromeClient(thatWebView) {
+                    // For Android 5.0+
                     public boolean onShowFileChooser (WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams)
                     {
                         LOG.d(LOG_TAG, "File Chooser 5.0+");
                         // If callback exists, finish it.
-                        if(mUploadCallback != null) {
-                            mUploadCallback.onReceiveValue(null);
+                        if(mUploadCallbackLollipop != null) {
+                            mUploadCallbackLollipop.onReceiveValue(null);
                         }
-                        mUploadCallback = filePathCallback;
+                        mUploadCallbackLollipop = filePathCallback;
 
                         // Create File Chooser Intent
                         Intent content = new Intent(Intent.ACTION_GET_CONTENT);
@@ -933,9 +972,30 @@ public class InAppBrowser extends CordovaPlugin {
                         content.setType("*/*");
 
                         // Run cordova startActivityForResult
-                        cordova.startActivityForResult(InAppBrowser.this, Intent.createChooser(content, "Select File"), FILECHOOSER_REQUESTCODE);
+                        cordova.startActivityForResult(InAppBrowser.this, Intent.createChooser(content, "Select File"), FILECHOOSER_REQUESTCODE_LOLLIPOP);
                         return true;
                     }
+
+                    // For Android 4.1+
+                    public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture)
+                    {
+                        LOG.d(LOG_TAG, "File Chooser 4.1+");
+                        // Call file chooser for Android 3.0+
+                        openFileChooser(uploadMsg, acceptType);
+                    }
+
+                    // For Android 3.0+
+                    public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType)
+                    {
+                        LOG.d(LOG_TAG, "File Chooser 3.0+");
+                        mUploadCallback = uploadMsg;
+                        Intent content = new Intent(Intent.ACTION_GET_CONTENT);
+                        content.addCategory(Intent.CATEGORY_OPENABLE);
+
+                        // run startActivityForResult
+                        cordova.startActivityForResult(InAppBrowser.this, Intent.createChooser(content, "Select File"), FILECHOOSER_REQUESTCODE);
+                    }
+
                 });
                 currentClient = new InAppBrowserClient(thatWebView, edittext, beforeload);
                 inAppWebView.setWebViewClient(currentClient);
@@ -960,8 +1020,10 @@ public class InAppBrowser extends CordovaPlugin {
                     }
                 }
 
-                settings.setMediaPlaybackRequiresUserGesture(mediaPlaybackRequiresUserGesture);
-                inAppWebView.addJavascriptInterface(new JsObject(), "cordova_iab");
+                if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    settings.setMediaPlaybackRequiresUserGesture(mediaPlaybackRequiresUserGesture);
+                    inAppWebView.addJavascriptInterface(new JsObject(), "cordova_iab");
+                }
 
                 String overrideUserAgent = preferences.getString("OverrideUserAgent", null);
                 String appendUserAgent = preferences.getString("AppendUserAgent", null);
@@ -989,16 +1051,15 @@ public class InAppBrowser extends CordovaPlugin {
                     CookieManager.getInstance().removeSessionCookie();
                 }
 
-                // Enable Thirdparty Cookies
-                CookieManager.getInstance().setAcceptThirdPartyCookies(inAppWebView,true);
+                // Enable Thirdparty Cookies on >=Android 5.0 device
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                    CookieManager.getInstance().setAcceptThirdPartyCookies(inAppWebView,true);
+                }
 
                 inAppWebView.loadUrl(url);
                 inAppWebView.setId(Integer.valueOf(6));
                 inAppWebView.getSettings().setLoadWithOverviewMode(true);
                 inAppWebView.getSettings().setUseWideViewPort(useWideViewPort);
-                // Multiple Windows set to true to mitigate Chromium security bug.
-                //  See: https://bugs.chromium.org/p/chromium/issues/detail?id=1083819
-                inAppWebView.getSettings().setSupportMultipleWindows(true);
                 inAppWebView.requestFocus();
                 inAppWebView.requestFocusFromTouch();
 
@@ -1028,8 +1089,12 @@ public class InAppBrowser extends CordovaPlugin {
 
                 WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
                 lp.copyFrom(dialog.getWindow().getAttributes());
-                lp.width = WindowManager.LayoutParams.MATCH_PARENT;
-                lp.height = WindowManager.LayoutParams.MATCH_PARENT;
+
+                lp.x = features.get(X) != null ? this.dpToPixels(Integer.parseInt(features.get(X))) : 0;
+                lp.y = features.get(Y) != null ? this.dpToPixels(Integer.parseInt(features.get(Y))) : 0;
+                lp.width = features.get(WIDTH) != null ? this.dpToPixels(Integer.parseInt(features.get(WIDTH))) : WindowManager.LayoutParams.MATCH_PARENT;
+                lp.height = features.get(HEIGHT) != null ? this.dpToPixels(Integer.parseInt(features.get(HEIGHT))) : cordova.getActivity().getResources().getDisplayMetrics().heightPixels-lp.y;
+
 
                 if (dialog != null) {
                     dialog.setContentView(main);
@@ -1081,14 +1146,32 @@ public class InAppBrowser extends CordovaPlugin {
      * @param intent the data from android file chooser
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        LOG.d(LOG_TAG, "onActivityResult");
-        // If RequestCode or Callback is Invalid
-        if(requestCode != FILECHOOSER_REQUESTCODE || mUploadCallback == null) {
-            super.onActivityResult(requestCode, resultCode, intent);
-            return;
+        // For Android >= 5.0
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            LOG.d(LOG_TAG, "onActivityResult (For Android >= 5.0)");
+            // If RequestCode or Callback is Invalid
+            if(requestCode != FILECHOOSER_REQUESTCODE_LOLLIPOP || mUploadCallbackLollipop == null) {
+                super.onActivityResult(requestCode, resultCode, intent);
+                return;
+            }
+            mUploadCallbackLollipop.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, intent));
+            mUploadCallbackLollipop = null;
         }
-        mUploadCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, intent));
-        mUploadCallback = null;
+        // For Android < 5.0
+        else {
+            LOG.d(LOG_TAG, "onActivityResult (For Android < 5.0)");
+            // If RequestCode or Callback is Invalid
+            if(requestCode != FILECHOOSER_REQUESTCODE || mUploadCallback == null) {
+                super.onActivityResult(requestCode, resultCode, intent);
+                return;
+            }
+
+            if (null == mUploadCallback) return;
+            Uri result = intent == null || resultCode != cordova.getActivity().RESULT_OK ? null : intent.getData();
+
+            mUploadCallback.onReceiveValue(result);
+            mUploadCallback = null;
+        }
     }
 
     /**
@@ -1288,13 +1371,27 @@ public class InAppBrowser extends CordovaPlugin {
             return false;
         }
 
+
+        /**
+         * Legacy (deprecated in API 21)
+         * For Android 4.4 and below.
+         * @param view
+         * @param url
+         * @return
+         */
+        @SuppressWarnings("deprecation")
+        @Override
+        public WebResourceResponse shouldInterceptRequest (final WebView view, String url) {
+            return shouldInterceptRequest(url, super.shouldInterceptRequest(view, url), null);
+        }
+
         /**
          * New (added in API 21)
          * For Android 5.0 and above.
          *
-         * @param view
          * @param request
          */
+        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
             return shouldInterceptRequest(request.getUrl().toString(), super.shouldInterceptRequest(view, request), request.getMethod());
@@ -1345,10 +1442,16 @@ public class InAppBrowser extends CordovaPlugin {
             super.onPageFinished(view, url);
 
             // Set the namespace for postMessage()
-            injectDeferredObject("window.webkit={messageHandlers:{cordova_iab:cordova_iab}}", null);
+            if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                injectDeferredObject("window.webkit={messageHandlers:{cordova_iab:cordova_iab}}", null);
+            }
 
             // CB-10395 InAppBrowser's WebView not storing cookies reliable to local device storage
-            CookieManager.getInstance().flush();
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                CookieManager.getInstance().flush();
+            } else {
+                CookieSyncManager.getInstance().sync();
+            }
 
             // https://issues.apache.org/jira/browse/CB-11248
             view.clearFocus();

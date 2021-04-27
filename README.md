@@ -68,14 +68,6 @@ simply hook `window.open` during initialization.  For example:
         window.open = cordova.InAppBrowser.open;
     }
 
-### Preferences
-
-#### <b>config.xml</b>
-- <b>InAppBrowserStatusBarStyle [iOS only]</b>: (string, options 'lightcontent', 'darkcontent' or 'default'. Defaults to 'default') set text color style for iOS. 'lightcontent' is intended for use on dark backgrounds. 'darkcontent' is only available since iOS 13 and intended for use on light backgrounds.
-```
-<preference name="InAppBrowserStatusBarStyle" value="lightcontent" />
-```
-
 ## cordova.InAppBrowser.open
 
 Opens a URL in a new `InAppBrowser` instance, the current browser
@@ -100,6 +92,10 @@ instance, or the system browser.
     All platforms support:
 
     - __location__: Set to `yes` or `no` to turn the `InAppBrowser`'s location bar on or off.
+    - __x__: Sets the X position for the InappBrowser. The default value is 0.
+    - __y__: Sets the Y position for the InappBrowser. The default value is 0.
+    - __width__: Sets the width of the InappBrowser Webview. The default value is fill-width of the screen.
+    - __height__: Sets the height of the InappBrowser Webview. The default value is fill-height of the screen.
 
     Android supports these additional options:
 
@@ -110,7 +106,7 @@ instance, or the system browser.
     - __closebuttoncaption__: set to a string to use as the close button's caption instead of a X. Note that you need to localize this value yourself.
     - __closebuttoncolor__: set to a valid hex color string, for example: `#00ff00`, and it will change the
     close button color from default, regardless of being a text or default X. Only has effect if user has location set to `yes`.
-    - __footer__: set to `yes` to show a close button in the footer similar to the iOS __Done__ button. 
+    - __footer__: set to `yes` to show a close button in the footer similar to the iOS __Done__ button.
     The close button will appear the same as for the header hence use __closebuttoncaption__ and __closebuttoncolor__ to set its properties.
     - __footercolor__: set to a valid hex color string, for example `#00ff00` or `#CC00ff00` (`#aarrggbb`) , and it will change the footer color from default.
     Only has effect if user has __footer__ set to `yes`.
@@ -175,16 +171,6 @@ instance, or the system browser.
 At the moment the only supported target in OSX is `_system`.
 
 `_blank` and `_self` targets are not yet implemented and are ignored silently. Pull requests and patches to get these to work are greatly appreciated.
-
-### iOS Quirks
-
-Since the introduction of iPadOS 13, iPads try to adapt their content mode / user agent for the optimal browsing experience. This may result in iPads having their user agent set to Macintosh, making it hard to detect them as mobile devices using user agent string sniffing. You can change this with the `PreferredContentMode` preference in `config.xml`.
-
-```xml
-<preference name="PreferredContentMode" value="mobile" />
-```
-
-The example above forces the user agent to contain `iPad`. The other option is to use the value `desktop` to turn the user agent to `Macintosh`.
 
 ### Browser Quirks
 
