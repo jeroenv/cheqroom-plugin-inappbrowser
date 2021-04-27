@@ -1093,7 +1093,7 @@ public class InAppBrowser extends CordovaPlugin {
                 lp.x = features.get(X) != null ? this.dpToPixels(Integer.parseInt(features.get(X))) : 0;
                 lp.y = features.get(Y) != null ? this.dpToPixels(Integer.parseInt(features.get(Y))) : 0;
                 lp.width = features.get(WIDTH) != null ? this.dpToPixels(Integer.parseInt(features.get(WIDTH))) : WindowManager.LayoutParams.MATCH_PARENT;
-                lp.height = features.get(HEIGHT) != null ? this.dpToPixels(Integer.parseInt(features.get(HEIGHT))) : cordova.getActivity().getResources().getDisplayMetrics().heightPixels-lp.y;
+                lp.height = features.get(HEIGHT) != null ? this.dpToPixels(Integer.parseInt(features.get(HEIGHT))) : WindowManager.LayoutParams.MATCH_PARENT;
 
 
                 if (dialog != null) {
