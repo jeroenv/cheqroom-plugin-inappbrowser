@@ -1155,7 +1155,7 @@ BOOL isExiting = FALSE;
 
     // orientation portrait or portraitUpsideDown: status bar is on the top and web view is to be aligned to the bottom of the status bar
     // orientation landscapeLeft or landscapeRight: status bar height is 0 in but lets account for it in case things ever change in the future
-    viewBounds.origin.y = statusBarHeight;
+    viewBounds.origin.y = _browserOptions.y != nil ? 0 :  statusBarHeight;
 
     // account for web view height portion that may have been reduced by a previous call to this method
     viewBounds.size.height = viewBounds.size.height - statusBarHeight + lastReducedStatusBarHeight;
