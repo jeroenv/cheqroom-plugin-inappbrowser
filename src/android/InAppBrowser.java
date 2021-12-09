@@ -1005,6 +1005,14 @@ public class InAppBrowser extends CordovaPlugin {
                 settings.setBuiltInZoomControls(showZoomControls);
                 settings.setPluginState(android.webkit.WebSettings.PluginState.ON);
 
+                // Allow loading local files (https://github.com/apache/cordova-plugin-inappbrowser/pull/883/files)
+                if (preferences.getBoolean("AndroidInsecureFileModeEnabled", false)) {
+                    LOG.d(LOG_TAG, "Enabled insecure file access");
+
+                    settings.setAllowFileAccess(true);
+                    settings.setAllowUniversalAccessFromFileURLs(true);
+                }
+                   
                 // Add postMessage interface
                 class JsObject {
                     @JavascriptInterface
